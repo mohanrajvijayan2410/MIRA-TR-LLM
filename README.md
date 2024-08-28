@@ -1,3 +1,8 @@
+This project is hosted on Python Anywhere.
+Visit our website to experience this chatbot
+https://mrv.pythonanywhere.com/
+
+
 Installing the neccessary modules, 
 ```sh
   pip install -r requirements.txt
