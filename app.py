@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 # Initialize the Groq client with your API key
 try:
-    client = groq.Groq(api_key="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")
+    client = groq.Groq(api_key="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")
 except Exception as e:
     print(f"Error initializing Groq client: {e}")
 
@@ -13,55 +13,59 @@ import requests
 @app.route('/chat', methods=['POST'])
 def chat():
     user_message = request.json.get('message')
-    groq_reply = chat_ai(user_message)
+    groq_reply = ask_ai(user_message)
     ls = groq_reply.split('\n')
     print(ls)
     groq_reply = '<br>'.join(ls)
     return jsonify({'reply': groq_reply})
 
-
-
 def ask_ai(prompt):
     try:
         response = client.chat.completions.create(
              messages=[
-                {"role": "system", "content": """You are an AI agent. I’ll give you a list of available Objects (OBJ) and valid actions. Pick out correct objects from the list of Available objects. Duration of the task is also given. With these, you have to generate a sequence of instructions for the given task description. Compute the total time for all the number of tasks.
-You should stricly folllow this output example
-Output Example:
-Available Objects:
-Book 1
-Book 2
-Book 3
-Book 4
-Book 5
-Task Sequence:
-Take OBJ: Take Book 1 (0 minutes)
-Read OBJ: Read the first chapter of Book 1 (5 minutes)
-Bookmark OBJ: Bookmark the first chapter of Book 1 (0 minutes)
-Take OBJ: Take Book 2 (0 minutes)
-Read OBJ: Read the first chapter of Book 2 (5 minutes)
-Bookmark OBJ: Bookmark the first chapter of Book 2 (0 minutes)
-Take OBJ: Take Book 3 (0 minutes)
-Read OBJ: Read the first chapter of Book 3 (5 minutes)
-Bookmark OBJ: Bookmark the first chapter of Book 3 (0 minutes)
-Take OBJ: Take Book 4 (0 minutes)
-Read OBJ: Read the first chapter of Book 4 (5 minutes)
-Bookmark OBJ: Bookmark the first chapter of Book 4 (0 minutes)
-Take OBJ: Take Book 5 (0 minutes)
-Read OBJ: Read the first chapter of Book 5 (5 minutes)
-Bookmark OBJ: Bookmark the first chapter of Book 5 (0 minutes)
-Repeat OBJ: Repeat steps TASK 1 to TASK 3 for all 5 books (25 minutes)
-Arrange OBJ: Arrange all the books on the shelf (5 minutes)
+                {"role": "system", "content": """You are an AI agent.
+Do not genrate additional instructions, make the instructions less in number
+You should stricly folllow this output template
+
+
+this is the Output template:
+Task: Prepare Five Bread Sandwiches with Cheese
+Sequence of Instructions:
+1. Instruction 1: Take 10 slices of White bread.
+• Type: SIMPLE INSTRUCTION
+   Duration: 1 minute
+2. Instruction 2: Add cheese to 10 slices of White bread.
+• Type: INSTRUCTION WITH PURPOSE
+   Duration: 1 minute
+3. Instruction 3: Optionally, heat the sandwiches using a Sandwich maker or Grill.
+Type: EXCLUSIVE INSTRUCTION
+    Duration: 3 minutes (optional)
+4. Instruction 4: Pickup the sandwiches then serve them.
+• Type: INSTRUCTION WITH SEQUENCE
+    Duration: 30 seconds
 Total Time Calculation:
-Each read and bookmark task takes 5 minutes.
-For five books: 5 minutes × 5 books = 25 minutes
-Repeat step:25  minutes.
-Arranging books on the shelf:  5 minutes
-Total Time: 25 + 25 + 5 = 55 minutes.
+• Without Heating: 2 minutes 30 seconds
+• With Heating: 5 minutes 30 seconds
+This sequence includes all the necessary instructions for preparing and serving the sandwiches,
+using the appropriate instruction types as per the MIRA protocol.
+
+Important
+You have to generate one action for each instruction : TYPE: SIMPLE INSTRUCTION
+ • Instructions can include one object or multiple objects (e.g. take pen or take
+ pens and papers) TYPE: SIMPLE INSTRUCTIONS
+ • Each instruction can include a goal- here the instruction should have the
+ intention of goal perspective (e.g, take pen if you have the intention of writing,
+ take pen if you want to write) TYPE: INSTRUCTION WITH PURPOSE
+ • Each instruction can include multiple objects which are exclusive (e.g. take pen
+ or pencil)- Instructions: TYPE: EXCLUSIVE INSTRUCTION
+ • If there are options between actions, include or within that instructions, to
+ represent exclusive or (e.g. Go by walk or take a car to reach destination)
+ TYPE: EXCLUSIVE INSTRUCTION
+ • If two actions are provided in a sequence, use “then” and do not use “and” (e.g. Take pen then write) TYPE: INSTRUCTION WITH SEQUENCE
                  """},
                 {"role": "user", "content": prompt},
             ],
-            model="mixtral-8x7b-32768",
+            model="llama3-70b-8192",
             temperature=0.7,
             max_tokens=500,
             top_p=1.0,
@@ -80,7 +84,7 @@ def chat_ai(prompt):
                 {"role": "user", "content": prompt},
             ],
             model="mixtral-8x7b-32768",
-            temperature=0.7,
+            temperature=0.2,
             max_tokens=500,
             top_p=1.0,
             stream=False,
@@ -99,8 +103,6 @@ def index():
         gpt_response = ask_ai(user_input)
         print(gpt_response)
     return render_template('index.html', gpt_response=gpt_response)
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
